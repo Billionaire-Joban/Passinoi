@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PASSINOI - Personalized Career App</title>
+<style>
+  :root {
+    --bg-light: #f9f9f9;
+    --bg-dark: #121212;
+    --text-light: #000;
+    --text-dark: #eee;
+    --primary-color: #4a90e2;
+    --children-bg: #fffae3;
+    --children-text: #555;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.dark {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+  }
+  body.children {
+    background-color: var(--children-bg);
+    color: var(--children-text);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+  }
+  header {
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+  }
+  .theme-switcher {
+    margin-top: 0.5rem;
+  }
+  .container {
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #aaa;
+    background: white;
+  }
+  body.dark .container {
+    background: #222;
+    box-shadow: 0 0 10px #444;
+  }
+  body.children .container {
+    background: #fff7cc;
+    box-shadow: 0 0 10px #d4c381;
+  }
+  button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  button:hover {
+    background-color: #357abd;
+  }
+  input, select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  label {
+    margin-top: 1rem;
+    display: block;
+    font-weight: bold;
+  }
+  .hidden {
+    display: none;
+  }
+  .watermark {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: #999;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>PASSINOI</h1>
+  <div class="theme-switcher">
+    <label for="themeSelect">Choose theme:</label>
+    <select id="themeSelect">
+      <option value="light">Light Mode</option>
+      <option value="dark">Dark Mode</option>
+      <option value="system">System Mode</option>
+      <option value="children">Children Mode</option>
+    </select>
+  </div>
+</header>
+
+<div class="container" id="app">
+  <div id="welcomeScreen">
+    <h2>Welcome to PASSINOI</h2>
+    <p>Your personalized professional world starts here.</p>
+    <button id="startBtn">Get Started</button>
+  </div>
+
+  <form id="userForm" class="hidden">
+    <label for="passion">What passion do you want to pursue?</label>
+    <input type="text" id="passion" name="passion" required />
+
+    <label for="education">What is your current education?</label>
+    <input type="text" id="education" name="education" required />
+
+    <label for="goalProfession">What do you want to become?</label>
+    <input type="text" id="goalProfession" name="goalProfession" required />
+
+    <label for="country">Which country do you live in?</label>
+    <select id="country" name="country" required>
+      <option value="">-- Select Country --</option>
+      <option value="India">India</option>
+      <option value="USA">USA</option>
+      <option value="UK">UK</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <div id="otherCountryDiv" class="hidden">
+      <label for="otherCountry">Please specify your country</label>
+      <input type="text" id="otherCountry" name="otherCountry" />
+    </div>
+
+    <label for="incomeGoal">How much do you want to earn? (per year)</label>
+    <input type="number" id="incomeGoal" name="incomeGoal" required min="0" />
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="personalizedReport" class="hidden">
+    <h2>Personalized Report</h2>
+    <p id="reportText"></p>
+    <h3>Recommended Courses</h3>
+    <ul id="coursesList"></ul>
+    <h3>Useful YouTube Videos</h3>
+    <ul id="videosList"></ul>
+    <h3>Suggested Books</h3>
+    <ul id="booksList"></ul>
+    <h3>Daily Check-in</h3>
+    <ul id="checkinList"></ul>
+
+    <label for="customCheckin">Add your own daily task:</label>
+    <input type="text" id="customCheckin" />
+    <button id="addCheckinBtn">Add Task</button>
+  </div>
+</div>
+
+<div class="watermark">
+  Made by JOBAN and ChatGPT
+</div>
+
+<script>
+  // Theme switcher logic
+  const themeSelect = document.getElementById('themeSelect');
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.body.className = 'dark';
+    } else if (theme === 'children') {
+      document.body.className = 'children';
+    } else if (theme === 'system') {
+      document.body.className = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } else {
+      document.body.className = 'light';
+    }
+  }
+  themeSelect.addEventListener('change', e => {
+    applyTheme(e.target.value);
+  });
+  applyTheme('light'); // default
+
+  // Show/hide other country input
+  const countrySelect = document.getElementById('country');
+  const otherCountryDiv = document.getElementById('otherCountryDiv');
+  countrySelect.addEventListener('change', () => {
+    if (countrySelect.value === 'Other') {
+      otherCountryDiv.classList.remove('hidden');
+      document.getElementById('otherCountry').required = true;
+    } else {
+      otherCountryDiv.classList.add('hidden');
+      document.getElementById('otherCountry').required = false;
+    }
+  });
+
+  // Form and navigation
+  const startBtn = document.getElementById('startBtn');
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  const userForm = document.getElementById('userForm');
+  const personalizedReport = document.getElementById('personalizedReport');
+
+  startBtn.addEventListener('click', () => {
+    welcomeScreen.classList.add('hidden');
+    userForm.classList.remove('hidden');
+  });
+
+  // Example data for courses, videos, books per profession (simplified)
+  const data = {
+    entrepreneur: {
+      courses: [
+        { name: "Entrepreneurship 101", url: "https://www.coursera.org/learn/wharton-entrepreneurship" },
+        { name: "Startup School", url: "https://startupschool.org/" }
+      ],
+      videos: [
+        { name: "How to Start a Startup", url: "https://www.youtube.com/watch?v=CBYhQcOo2fE" },
+        { name: "Entrepreneur Mindset", url: "https://www.youtube.com/watch?v=Z5iWr6Srsj8" }
+      ],
+      books: [
+        { name: "The Lean Startup by Eric Ries", url: "https://www.amazon.com/Lean-Startup-Entrepreneurs-Continuous-Innovation/dp/0307887898" },
+        { name: "Zero to One by Peter Thiel", url: "https://www.amazon.com/Zero-One-Notes-Startups-Future/dp/0804139296" }
+      ],
+      dailyTasks: [
+        "Research market trends for 30 minutes",
+        "Network with one new person",
+        "Watch one entrepreneurial video"
+      ]
+    },
+    doctor: {
+      courses: [
+        { name: "Medical Terminology", url: "https://www.coursera.org/learn/medical-terminology" },
+        { name: "Anatomy Basics", url: "https://www.khanacademy.org/science/health-and-medicine/human-anatomy-and-physiology" }
+      ],
+      videos: [
+        { name: "How to become a doctor", url: "https://www.youtube.com/watch?v=9N-jLl2jX_k" },
+        { name: "Medical School Advice", url: "https://www.youtube.com/watch?v=lhhk8xYtE7Y" }
+      ],
+      books: [
+        { name: "Gray's Anatomy", url: "https://www.amazon.com/Grays-Anatomy-40th-Henry-Gray/dp/0443061675" },
+        { name: "Robbins Basic Pathology", url: "https://www.amazon.com/Robbins-Basic-Pathology-Kumar/dp/0323353179" }
+      ],
+      dailyTasks: [
+        "Study anatomy for 2 hours",
+        "Complete lab exercises",
+        "Watch medical lecture videos"
+      ]
+    }
+  };
+
+  userForm.addEventListener('submit', e => {
+    e.preventDefault();
+    // Collect form data
+    const passion = document.getElementById('passion').value.toLowerCase();
+    const education = document.getElementById('education').value;
+    const goalProfession = document.getElementById('goalProfession').value.toLowerCase();
+    let country = document.getElementById('country').value;
+    if (country === 'Other') {
+      country = document.getElementById('otherCountry').value;
+    }
+    const incomeGoal = document.getElementById('incomeGoal').value;
+
+    userForm.classList.add('hidden');
+
+    // Build personalized report
+    personalizedReport.classList.remove('hidden');
+
+    const reportText = `
+      Welcome! You want to pursue <strong>${passion}</strong> and become a <strong>${goalProfession}</strong>.<br>
+      Currently, your education is: <strong>${education}</strong>.<br>
+      You live in: <strong>${country}</strong>.<br>
+      Your income goal is: <strong>$${incomeGoal} per year</strong>.<br>
+      Let's start your journey!
+    `;
+    document.getElementById('reportText').innerHTML = reportText;
+
+    // Show courses, videos, books, daily tasks based on profession if known
+    const profData = data[goalProfession] || null;
+
+    const coursesList = document.getElementById('coursesList');
+    const videosList = document.getElementById('videosList');
+    const booksList = document.getElementById('booksList');
+    const checkinList = document.getElementById('checkinList');
+
+    // Clear old lists
+    coursesList.innerHTML = '';
+    videosList.innerHTML = '';
+    booksList.innerHTML = '';
+    checkinList.innerHTML = '';
+
+    if (profData) {
+      profData.courses.forEach(c => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = c.url;
+        a.target = '_blank';
+        a.textContent = c.name;
+        li.appendChild(a);
+        coursesList.appendChild(li);
+      });
+
+      profData.videos.forEach(v => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = v.url;
+        a.target = '_blank';
+        a.textContent = v.name;
+        li.appendChild(a);
+        videosList.appendChild(li);
+      });
+
+      profData.books.forEach(b => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = b.url;
+        a.target = '_blank';
+        a.textContent = b.name;
+        li.appendChild(a);
+        booksList.appendChild(li);
+      });
+
+      profData.dailyTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.textContent = task;
+        checkinList.appendChild(li);
+      });
+    } else {
+      coursesList.innerHTML = '<li>No data available for this profession.</li>';
+      videosList.innerHTML = '<li>No data available for this profession.</li>';
+      booksList.innerHTML = '<li>No data available for this profession.</li>';
+      checkinList.innerHTML = '<li>You can add your own daily tasks below.</li>';
+    }
+  });
+
+  // Add custom daily task
+  const addCheckinBtn = document.getElementById('addCheckinBtn');
+  addCheckinBtn.addEventListener('click', () => {
+    const customInput = document.getElementById('customCheckin');
+    const task = customInput.value.trim();
+    if (task) {
+      const li = document.createElement('li');
+      li.textContent = task;
+      document.getElementById('checkinList').appendChild(li);
+      customInput.value = '';
+    }
+  });
+</script>
+</body>
+</html>
